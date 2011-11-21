@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "QtDebug"
 #include "QTimer"
-#include "listitem.h"
 #include "QDir"
 #include "QFile"
 #include "QTextStream"
