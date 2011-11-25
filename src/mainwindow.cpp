@@ -45,35 +45,26 @@ bool MainWindow::loadOrCreateDataFile()
 {
     QDir workDir(QDir::home());
     if (!workDir.cd(".simpletimetracker")){
-        qDebug()<<"Could not switch to dir .simpletimetracker";
-        if (!workDir.exists(".simpletimetracker")){
-            qDebug()<<"no such dir "+workDir.absolutePath()+"/.simpletimetracker";
-            if (!workDir.mkdir(".simpletimetracker")) {
-                qDebug()<<"Could not create the dir .simpletimetracker";
-                return false;
-            }
-        }
+		ui->statusBar->showMessage("Could not load file "+workDir.absolutePath()+QDir::separator()+".simpletracker/data.txt");
+		return false;
     }
-    workDir.cd(QDir::home().absolutePath());
-    if (!workDir.cd(".simpletimetracker")) {
-        qDebug()<<"Could not switch to dir "<<workDir.absolutePath()<<QDir::separator()<<".simpletimetracker";
-        return false;
-    }
-    QFile dataFile(workDir.absolutePath()+QDir::separator()+"data.txt");
-    if (!dataFile.exists()){
-        qDebug()<<"File "<<workDir.absolutePath()+QDir::separator()+"data.txt"<<" does not exist.. continue";
-        return false;
-    }
-    else {
-        if (!dataFile.open(QIODevice::ReadOnly | QIODevice::Text))
-            return false;
-        QTextStream in(&dataFile);
-        while (!in.atEnd()) {
-            QString line = in.readLine();
-            process_line(line);
-        }
-        return true;
-    }
+	else {
+		QFile dataFile(workDir.absolutePath()+QDir::separator()+"data.txt");
+		if (!dataFile.exists()){
+			ui->statusBar->showMessage("File "+workDir.absolutePath()+QDir::separator()+"data.txt does not exist.");
+			return false;
+		}
+		else {
+			if (!dataFile.open(QIODevice::ReadOnly | QIODevice::Text))
+				return false;
+			QTextStream in(&dataFile);
+			while (!in.atEnd()) {
+				QString line = in.readLine();
+				process_line(line);
+			}
+			return true;
+		}
+	}
 }
 
 void MainWindow::process_line(QString line)
@@ -109,38 +100,45 @@ void MainWindow::closeEvent(QCloseEvent *event)
     taskitem* task;
     QList<QStandardItem*> items;
     QDir workDir(QDir::home());
-    if (!workDir.cd(".simpletimetracker")){
-        qDebug()<<"Could not switch to dir .simpletimetracker";
-        if (!workDir.exists(".simpletimetracker")){
-            qDebug()<<"no such dir "+workDir.absolutePath()+"/.simpletimetracker";
-            if (!workDir.mkdir(".simpletimetracker")) {
-                qDebug()<<"Could not create the dir .simpletimetracker";
-            }
-        }
+	if (!workDir.exists(".simpletimetracker") && !workDir.mkdir(".simpletimetracker") ){
+		QMessageBox error(this);
+		error.setText("Could not create directory "+workDir.absolutePath()+QDir::separator()+".simpletracker  Will not be able to save the tasks and their total runing time");
+		error.exec();
+	}
+	else if (!workDir.cd(".simpletimetracker")){
+		QMessageBox error(this);
+		error.setText("Could not switch to dir .simpletracker  Will not be able to save the tasks and their total runing time");
+		error.exec();
     }
-    workDir.cd(QDir::home().absolutePath());
-    if (!workDir.cd(".simpletimetracker")) {
-        qDebug()<<"Could not switch to dir "<<workDir.absolutePath()<<QDir::separator()<<".simpletimetracker";
-    }
-    QFile dataFile(workDir.absolutePath()+QDir::separator()+"data.txt");
-    if (dataFile.open(QIODevice::WriteOnly | QIODevice::Text)){
-        QTextStream out(&dataFile);
-        foreach (taskName,this->_explicitListOfTasks)
-        {
-            items = this->_modell.findItems(taskName,Qt::MatchExactly);
-            if (items.count()!=1)
-                qDebug()<<"Strange, there SHOULD be exactly ONE task named "<<taskName;
-            else
-            {
-                task = (taskitem*) items.at(0);
-                out << task->getTaskName()<<";;0;;"<<task->getTotalTime_ms();
-            }
-        }
-        dataFile.close();
-    }
-    else
-        qDebug()<<"Could not open the file "<<workDir.absolutePath()<<QDir::separator()<<"data.txt";
-    event->accept();
+	else {
+		if (this->trackTime)
+			this->toggleTimer();
+		QFile dataFile(workDir.absolutePath()+QDir::separator()+"data.txt");
+		if (dataFile.open(QIODevice::WriteOnly | QIODevice::Text)){
+			QTextStream out(&dataFile);
+			foreach (taskName,this->_explicitListOfTasks)
+			{
+				items = this->_modell.findItems(taskName,Qt::MatchExactly);
+				if (items.count()!=1){
+					QMessageBox error(this);
+					error.setText("Strange, there SHOULD be exactly ONE task named "+taskName);
+					error.exec();
+				}
+				else
+				{
+					task = (taskitem*) items.at(0);
+					out << task->getTaskName()<<";;0;;"<<task->getTotalTime_ms()<<endl;
+				}
+			}
+			dataFile.close();
+		}
+		else{
+			QMessageBox error(this);
+			error.setText("Could not open the file "+workDir.absolutePath()+QDir::separator()+"data.txt");
+			error.exec();
+		}
+	}
+	event->accept();
 }
 
 MainWindow::~MainWindow()
