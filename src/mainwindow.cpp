@@ -10,6 +10,7 @@
 #include "taskitem.h"
 #include <QMessageBox>
 #include <QStandardItem>
+#include <QStringList>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -26,6 +27,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->timer,SIGNAL(timeout()),this,SLOT(displayCurrentRunningTime()));
     connect(ui->toggleTimer,SIGNAL(clicked()),this,SLOT(toggleTimer()));
     connect(ui->treeView,SIGNAL(clicked(QModelIndex)),this,SLOT(itemSelected(QModelIndex)));
+	QStringList header;
+	header<<"Task"<<"Total time";
+	_modell.setHorizontalHeaderLabels(header);
 }
 
 
@@ -38,6 +42,11 @@ void MainWindow::itemSelected(QModelIndex index)
             taskitem* item = (taskitem*) sitem;
             ui->taskNameEdit->setText(item->getTaskName());
         }
+		else if (sitem->column()==1)
+		{
+			taskitem* item = (taskitem*) _modell.item(sitem->row(),0);
+			ui->taskNameEdit->setText(item->getTaskName());
+		}
     }
 }
 

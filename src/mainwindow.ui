@@ -35,7 +35,7 @@
      <rect>
       <x>320</x>
       <y>360</y>
-      <width>201</width>
+      <width>91</width>
       <height>31</height>
      </rect>
     </property>
@@ -79,7 +79,7 @@
      </rect>
     </property>
     <attribute name="headerVisible">
-     <bool>false</bool>
+     <bool>true</bool>
     </attribute>
    </widget>
   </widget>
